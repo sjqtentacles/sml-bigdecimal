@@ -1,0 +1,6 @@
+# Compiled test binary
+/test/test
+
+# MLton artifacts
+*.o
+*.exe

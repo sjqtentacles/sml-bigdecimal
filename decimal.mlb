@@ -1,0 +1,8 @@
+(* MLton basis file for the sml-bigdecimal library.
+ * Consumers can include this file to bring `structure Decimal` into scope. *)
+local
+  $(SML_LIB)/basis/basis.mlb
+in
+  decimal.sig
+  decimal.sml
+end
