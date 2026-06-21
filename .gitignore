@@ -1,4 +1,7 @@
-# Compiled test binary
+# Build output
+/bin/
+
+# Compiled test binary (legacy default output location)
 /test/test
 
 # MLton artifacts

@@ -1,5 +1,7 @@
 # sml-bigdecimal
 
+[![CI](https://github.com/sjqtentacles/sml-bigdecimal/actions/workflows/ci.yml/badge.svg)](https://github.com/sjqtentacles/sml-bigdecimal/actions/workflows/ci.yml)
+
 Arbitrary-precision decimal arithmetic for Standard ML.
 
 `sml-bigdecimal` provides a `Decimal` structure: a Java-`BigDecimal`-style
@@ -95,21 +97,37 @@ end
   an optional `.` with a fractional part (`.5` is allowed; `3.` is not), and an
   optional `e`/`E` exponent.
 
+## Installing with smlpkg
+
+This library follows the conventions of the
+[`smlpkg`](https://github.com/diku-dk/smlpkg) package manager. There is no
+registry or account to sign up for -- packages are referenced directly by
+their git URL. In your own project's directory:
+
+```sh
+smlpkg add github.com/sjqtentacles/sml-bigdecimal
+smlpkg sync
+```
+
+This downloads the library into
+`lib/github.com/sjqtentacles/sml-bigdecimal/`. Reference its `.mlb` from your
+own `.mlb` with a relative path.
+
 ## Usage
 
 ### MLton
 
 ```
 $(SML_LIB)/basis/basis.mlb
-path/to/sml-bigdecimal/decimal.mlb
+lib/github.com/sjqtentacles/sml-bigdecimal/decimal.mlb
 your-code.sml
 ```
 
 ### Poly/ML
 
 ```sml
-use "decimal.sig";
-use "decimal.sml";
+use "lib/github.com/sjqtentacles/sml-bigdecimal/decimal.sig";
+use "lib/github.com/sjqtentacles/sml-bigdecimal/decimal.sml";
 ```
 
 ## Building and testing
@@ -118,11 +136,10 @@ The test suite is a dependency-free assertion runner (pure Standard ML) that
 exits non-zero if any assertion fails.
 
 ```sh
-# Type-check the library in isolation
-mlton -stop tc decimal.mlb
-
-# Build and run the tests
-mlton test/test.mlb && ./test/test
+make test        # build + run the suite under MLton
+make test-poly   # run the suite under Poly/ML
+make all-tests   # run under both
+make clean
 ```
 
 Built test-first (TDD): the signature and full suite were written first against
@@ -138,11 +155,15 @@ human-readable decimal values with explicit rounding.
 ## Layout
 
 ```
-decimal.sig    the DECIMAL signature (the contract)
-decimal.sml    structure Decimal :> DECIMAL
-decimal.mlb    MLton basis file for consumers
-test/test.sml  assertion-based test suite
-test/test.mlb  MLton basis file for the tests
+sml.pkg                 smlpkg manifest (package name + requires)
+lib/github.com/sjqtentacles/sml-bigdecimal/
+  decimal.sig           the DECIMAL signature (the contract)
+  decimal.sml           structure Decimal :> DECIMAL
+  decimal.mlb           MLton basis file for consumers
+test/test.sml           assertion-based test suite
+test/test.mlb           MLton basis file for the tests
+Makefile                build + test (MLton and Poly/ML)
+.github/workflows/ci.yml  CI on both compilers
 ```
 
 ## License
