@@ -136,6 +136,58 @@ fun run () =
     val () = check "big + big doubles coeff"
                    (D.toString (D.+ (d big, d big)) =
                     "246913578024691357802469135780.24")
+
+    (* round / roundTo with explicit modes *)
+    val () = check "round HALF_EVEN 2.5 = 2" (D.toString (D.round HALF_EVEN (d "2.5")) = "2")
+    val () = check "round HALF_UP 2.5 = 3" (D.toString (D.round HALF_UP (d "2.5")) = "3")
+    val () = check "round HALF_EVEN 3.5 = 4" (D.toString (D.round HALF_EVEN (d "3.5")) = "4")
+    val () = check "round HALF_EVEN 1.5 = 2" (D.toString (D.round HALF_EVEN (d "1.5")) = "2")
+    val () = check "roundTo HALF_UP 2 of 1.2345 = 1.23"
+                   (D.toString (D.roundTo HALF_UP 2 (d "1.2345")) = "1.23")
+    val () = check "roundTo HALF_EVEN 2 of 1.225 = 1.22 (ties to even)"
+                   (D.toString (D.roundTo HALF_EVEN 2 (d "1.225")) = "1.22")
+    val () = check "roundTo HALF_EVEN 2 of 1.235 = 1.24 (ties to even)"
+                   (D.toString (D.roundTo HALF_EVEN 2 (d "1.235")) = "1.24")
+    val () = check "roundTo HALF_UP 2 of 1.235 = 1.24"
+                   (D.toString (D.roundTo HALF_UP 2 (d "1.235")) = "1.24")
+    val () = check "roundTo negative raises Domain"
+                   (raisesDomain (fn () => D.roundTo HALF_UP ~1 (d "2.5")))
+
+    (* floor / ceil / truncate to integer scale *)
+    val () = check "floor 2.9 = 2" (D.toString (D.floor (d "2.9")) = "2")
+    val () = check "floor -2.1 = -3" (D.toString (D.floor (d "-2.1")) = "-3")
+    val () = check "ceil 2.1 = 3" (D.toString (D.ceil (d "2.1")) = "3")
+    val () = check "ceil -2.9 = -2" (D.toString (D.ceil (d "-2.9")) = "-2")
+    val () = check "truncate 2.9 = 2" (D.toString (D.truncate (d "2.9")) = "2")
+    val () = check "truncate -2.9 = -2" (D.toString (D.truncate (d "-2.9")) = "-2")
+
+    (* pow: integer exponent, exact scale accumulation *)
+    val () = check "pow (1.1, 2) = 1.21" (D.toString (D.pow (d "1.1", 2)) = "1.21")
+    val () = check "pow (x, 0) = 1" (D.toString (D.pow (d "3.14", 0)) = "1")
+    val () = check "pow (2, 10) = 1024" (D.toString (D.pow (d "2", 10)) = "1024")
+    val () = check "pow (0.1, 3) = 0.001" (D.toString (D.pow (d "0.1", 3)) = "0.001")
+    val () = check "pow (-2, 3) = -8" (D.toString (D.pow (d "-2", 3)) = "-8")
+    val () = check "pow negative exponent raises Domain"
+                   (raisesDomain (fn () => D.pow (d "2", ~1)))
+
+    (* sqrt: Newton on IntInf, truncated to n places, deterministic *)
+    val () = check "sqrt 10 of 2 = 1.4142135623"
+                   (D.toString (D.sqrt 10 (d "2")) = "1.4142135623")
+    val () = check "sqrt 0 of 4 = 2" (D.toString (D.sqrt 0 (d "4")) = "2")
+    val () = check "sqrt 2 of 2 = 1.41" (D.toString (D.sqrt 2 (d "2")) = "1.41")
+    val () = check "sqrt 4 of 2 = 1.4142" (D.toString (D.sqrt 4 (d "2")) = "1.4142")
+    val () = check "sqrt 5 of 9 = 3.00000" (D.toString (D.sqrt 5 (d "9")) = "3.00000")
+    val () = check "sqrt 3 of 0 = 0.000" (D.toString (D.sqrt 3 (d "0")) = "0.000")
+    (* sqrt(2)^2 stays within the chosen scale: result^2 <= 2 < (result + ulp)^2 *)
+    val approx = D.sqrt 6 (d "2")
+    val () = check "sqrt 6 of 2 squared <= 2"
+                   (D.compare (D.* (approx, approx), d "2") <> GREATER)
+    val () = check "sqrt 6 of 2 squared within 10^-5 of 2"
+                   (D.compare (D.- (d "2", D.* (approx, approx)), d "0.00001") = LESS)
+    val () = check "sqrt negative raises Domain"
+                   (raisesDomain (fn () => D.sqrt 4 (d "-2")))
+    val () = check "sqrt negative scale raises Domain"
+                   (raisesDomain (fn () => D.sqrt ~1 (d "2")))
   in
     print ("\n" ^ Int.toString (!passed) ^ " passed, "
            ^ Int.toString (!failed) ^ " failed\n");

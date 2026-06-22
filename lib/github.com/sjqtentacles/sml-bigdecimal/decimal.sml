@@ -116,6 +116,54 @@ struct
           (signed, n)
         end
 
+  (* Round to a named scale; an alias of setScale with a more discoverable name. *)
+  fun roundTo mode n x = setScale mode n x
+
+  (* Round to an integer (scale 0). *)
+  fun round mode x = setScale mode 0 x
+
+  fun floor x    = setScale FLOOR 0 x
+  fun ceil x     = setScale CEILING 0 x
+  fun truncate x = setScale TRUNCATE 0 x
+
+  (* Integer power. A non-negative exponent raises the coefficient and scales
+   * linearly, keeping the value exact. *)
+  fun pow ((c, s) : t, e : int) : t =
+      if e < 0 then raise General.Domain
+      else if e = 0 then one
+      else (IntInf.pow (c, e), Int.* (s, e))
+
+  (* Floor of the integer square root via Newton's method on IntInf (exact, no
+   * machine real). For n >= 0 returns the largest r with r*r <= n; the initial
+   * guess 2^(ceil(bits/2)) is >= sqrt n, from which Newton decreases to the
+   * floor. *)
+  fun isqrt (n : IntInf.int) : IntInf.int =
+      if n < zeroI then raise General.Domain
+      else if n < (2 : IntInf.int) then n
+      else
+        let
+          fun bits (k, acc) = if k = zeroI then acc else bits (IntInf.div (k, 2), Int.+ (acc, 1))
+          val b = bits (n, 0)
+          val g0 = IntInf.<< (oneI, Word.fromInt (Int.div (Int.+ (b, 1), 2)))
+          fun iter x =
+              let val y = IntInf.div (IntInf.+ (x, IntInf.div (n, x)), 2)
+              in if y >= x then x else iter y end
+        in
+          iter g0
+        end
+
+  (* Square root truncated to n fractional digits. Using the identity
+   * floor(sqrt q) = isqrt(floor q): the value is c*10^(-s), so sqrt scaled to
+   * n places is floor(sqrt(c*10^(2n)/10^s)) = isqrt((c*10^(2n)) div 10^s). *)
+  fun sqrt (n : int) ((c, s) : t) : t =
+      if n < 0 orelse c < zeroI then raise General.Domain
+      else
+        let
+          val radicand = IntInf.div (IntInf.* (c, pow10 (Int.* (2, n))), pow10 s)
+        in
+          (isqrt radicand, n)
+        end
+
   fun compare (x, y) =
       let val (a, b, _) = align (x, y) in IntInf.compare (a, b) end
 

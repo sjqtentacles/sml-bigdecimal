@@ -73,6 +73,15 @@ sig
   val *   : t * t -> t                           (* result scale = sum of input scales *)
   val div : rounding -> int -> t * t -> t        (* explicit result scale; raises General.Div on zero *)
 
+  val roundTo  : rounding -> int -> t -> t        (* round to n fractional digits *)
+  val round    : rounding -> t -> t               (* round to an integer (scale 0) *)
+  val floor    : t -> t                           (* to integer, toward negative infinity *)
+  val ceil     : t -> t                           (* to integer, toward positive infinity *)
+  val truncate : t -> t                           (* to integer, toward zero *)
+
+  val pow  : t * int -> t                         (* integer power; exponent >= 0 *)
+  val sqrt : int -> t -> t                        (* square root to n fractional digits (Newton) *)
+
   val compare : t * t -> order
   val equal   : t * t -> bool                    (* by value: 2.5 = 2.50 *)
 
@@ -96,6 +105,38 @@ end
 - **`fromString` grammar.** Optional sign (`-`, `~`, or `+`), an integer part,
   an optional `.` with a fractional part (`.5` is allowed; `3.` is not), and an
   optional `e`/`E` exponent.
+
+### Rounding, powers, and square roots
+
+Beyond `setScale`, the library offers named rounding helpers, integer powers,
+and a decimal square root. Everything is computed over the exact `IntInf`
+coefficient — the square root uses Newton's method on the scaled integer, never
+machine `real` — so results are deterministic and identical across compilers.
+
+```sml
+Decimal.round HALF_EVEN (d "2.5")        (* 2  (banker's rounding) *)
+Decimal.round HALF_UP   (d "2.5")        (* 3 *)
+Decimal.roundTo HALF_UP 2 (d "1.2345")   (* 1.23 *)
+
+Decimal.floor    (d "2.9")               (* 2  *)
+Decimal.ceil     (d "2.1")               (* 3  *)
+Decimal.truncate (d "-2.9")              (* -2 *)
+
+Decimal.pow  (d "1.1", 2)                (* 1.21 *)
+Decimal.sqrt 10 (d "2")                  (* 1.4142135623 *)
+```
+
+- **`round` / `roundTo`.** `roundTo mode n` rounds to exactly `n` fractional
+  digits (a named alias of `setScale`); `round mode` rounds to an integer
+  (scale 0). Both reuse the existing `rounding` modes.
+- **`floor` / `ceil` / `truncate`.** Convenience rounding to an integer toward
+  negative infinity, positive infinity, and zero respectively.
+- **`pow (x, e)`.** Integer power; `pow (x, 0) = one` and the result scale is
+  `scale x * e`, so the value is exact. A negative exponent raises
+  `General.Domain` (use `div` with an explicit scale for reciprocals).
+- **`sqrt n x`.** Square root truncated to `n` fractional digits via Newton's
+  method on the scaled coefficient, so `result^2 <= x`. A negative operand or
+  negative `n` raises `General.Domain`.
 
 ## Installing with smlpkg
 
