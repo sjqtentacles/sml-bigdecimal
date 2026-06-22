@@ -180,11 +180,33 @@ exits non-zero if any assertion fails.
 make test        # build + run the suite under MLton
 make test-poly   # run the suite under Poly/ML
 make all-tests   # run under both
+make example     # build + run the demo
 make clean
 ```
 
 Built test-first (TDD): the signature and full suite were written first against
 a stub, confirmed to compile and fail (red), then implemented to green.
+
+## Example
+
+[`examples/demo.sml`](examples/demo.sml) does scale-preserving arithmetic on a
+couple of fixed decimals, plus rounded division, an integer power, a Newton
+square root, and two rounding modes. Everything is computed over exact `IntInf`
+coefficients and printed with `Decimal.toString`, so the output is identical on
+every run and on both compilers. Run it with:
+
+```
+$ make example
+a = 3.14, b = 2.50
+a + b            = 5.64
+a - b            = 0.64
+a * b            = 7.8500
+a / b (HALF_EVEN, 4dp) = 1.2560
+1.1 ^ 2          = 1.21
+sqrt 2 (10 dp)   = 1.4142135623
+round HALF_EVEN 2.5 = 2
+round HALF_UP   2.5 = 3
+```
 
 ## Related
 
